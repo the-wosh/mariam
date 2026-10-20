@@ -424,10 +424,6 @@ html = r'''<!DOCTYPE html>
 html_path = base / "index.html"
 html_path.write_text(html, encoding="utf-8")
 
-zip_path = Path("/mnt/data/mariam_portfolio_website.zip")
-with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-    zf.write(html_path, "mariam_portfolio/index.html")
-    zf.write(portrait_path, "mariam_portfolio/assets/portrait-reference.png")
 
 print("Created responsive portfolio website files:")
 print(f"HTML: {html_path}")
