@@ -1,10 +1,10 @@
 assets = base / "assets"
 assets.mkdir(parents=True, exist_ok=True)
 
-source = Image.open("/mnt/data/image.png").convert("RGB")
+source = Image.open("/mnt/data/mariam-profile.jpg").convert("RGB")
 # Crop the portrait area from the supplied design reference.
 portrait = source.crop((545, 78, 905, 483))
-portrait_path = assets / "portrait-reference.png"
+portrait_path = assets / "mariam-profile.jpg"
 portrait.save(portrait_path, quality=95)
 
 html = r'''<!DOCTYPE html>
