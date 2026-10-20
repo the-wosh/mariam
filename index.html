@@ -1,32 +1,439 @@
-<!DOCTYPE html>
+from PIL import Image
+from pathlib import Path
+import zipfile
+
+base = Path("/mnt/data/mariam_portfolio")
+assets = base / "assets"
+assets.mkdir(parents=True, exist_ok=True)
+
+source = Image.open("/mnt/data/image.png").convert("RGB")
+# Crop the portrait area from the supplied design reference.
+portrait = source.crop((545, 78, 905, 483))
+portrait_path = assets / "portrait-reference.png"
+portrait.save(portrait_path, quality=95)
+
+html = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Professional Portfolio</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; background-color: #f4f4f4; color: #333; }
-        header { background: #333; color: #fff; padding: 20px; text-align: center; }
-        .container { background: #fff; padding: 20px; margin-top: 20px; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7efe3">
+  <meta name="description" content="Mariam G. Mambuay creates AI-generated video content and motion-led visuals for brands, creators, and campaigns.">
+  <title>Mariam G. Mambuay — AI Video & Motion Design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #f7efe3;
+      --cream-deep: #efe2d0;
+      --burgundy: #541a1b;
+      --maroon: #3e1113;
+      --brown: #6d4635;
+      --tan: #c6a27d;
+      --ink: #281b18;
+      --muted: #705d53;
+      --line: rgba(84, 26, 27, .22);
+      --serif: "Playfair Display", Georgia, serif;
+      --sans: "DM Sans", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--cream);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .site-header {
+      min-height: 70px;
+      padding: 0 clamp(22px, 6.5vw, 84px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      font-family: var(--serif);
+      letter-spacing: .22em;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+    .nav { display: flex; align-items: center; gap: clamp(18px, 3vw, 36px); }
+    .nav a { font-size: 12px; transition: color .2s ease; }
+    .nav a:hover { color: #a15b4a; }
+    .nav .nav-cta {
+      color: #fffaf3;
+      background: var(--burgundy);
+      padding: 9px 20px;
+      border-radius: 999px;
+      transition: transform .2s ease, background .2s ease;
+    }
+    .nav .nav-cta:hover { background: var(--maroon); transform: translateY(-2px); }
+
+    .hero {
+      min-height: 410px;
+      padding: 34px clamp(22px, 6.8vw, 88px) 30px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      align-items: center;
+      gap: 34px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 78% 46%, rgba(198,162,125,.20), transparent 37%),
+        linear-gradient(115deg, #fbf5eb 0%, var(--cream) 65%, #f0e1cf 100%);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--burgundy);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 620px;
+      margin: 0;
+      color: var(--maroon);
+      font-family: var(--serif);
+      font-size: clamp(40px, 5.2vw, 64px);
+      font-weight: 500;
+      letter-spacing: -.055em;
+      line-height: 1.02;
+    }
+    .hero-copy {
+      max-width: 440px;
+      margin: 22px 0 24px;
+      font-size: clamp(14px, 1.4vw, 16px);
+      line-height: 1.65;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 40px;
+      padding: 10px 26px;
+      border: 1px solid var(--burgundy);
+      border-radius: 999px;
+      font-size: 12px;
+      transition: transform .2s ease, background .2s ease, color .2s ease;
+    }
+    .button:hover { transform: translateY(-2px); }
+    .button-primary { color: white; background: var(--burgundy); }
+    .button-primary:hover { background: var(--maroon); }
+    .button-outline { color: var(--burgundy); background: transparent; }
+    .button-outline:hover { background: var(--cream-deep); }
+
+    .hero-visual {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 350px;
+    }
+    .portrait-frame {
+      position: relative;
+      width: min(100%, 340px);
+      height: 365px;
+      overflow: hidden;
+      border: 1px solid var(--tan);
+      border-radius: 48% 48% 45% 45% / 42% 42% 43% 43%;
+      background: var(--burgundy);
+      box-shadow: 0 0 0 5px rgba(255,250,243,.52);
+      transform: rotate(1deg);
+    }
+    .portrait-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center 30%;
+      mix-blend-mode: normal;
+    }
+    .orbit {
+      position: absolute;
+      width: 112%;
+      height: 54px;
+      border: 1px solid rgba(177,112,72,.85);
+      border-radius: 50%;
+      transform: rotate(-17deg);
+      pointer-events: none;
+    }
+    .spark {
+      position: absolute;
+      color: #9a5637;
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: 1;
+    }
+    .spark-one { top: 40px; left: 0; }
+    .spark-two { right: 0; top: 145px; font-size: 28px; }
+    .availability {
+      position: absolute;
+      top: 22px;
+      right: -8px;
+      padding: 9px 14px;
+      border: 1px solid rgba(84,26,27,.12);
+      border-radius: 999px;
+      background: rgba(255,250,243,.92);
+      box-shadow: 0 4px 16px rgba(65,31,22,.08);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .availability::before { content: "●"; color: #53875a; margin-right: 7px; }
+
+    .section { padding: 28px clamp(22px, 6.5vw, 84px) 34px; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .section-heading h2 {
+      margin: 0;
+      color: var(--burgundy);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .section-heading .rule { flex: 1; height: 1px; background: var(--line); }
+    .section-heading a { color: var(--burgundy); font-size: 11px; white-space: nowrap; }
+    .projects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .project-card {
+      position: relative;
+      min-height: 220px;
+      overflow: hidden;
+      isolation: isolate;
+      border-radius: 7px;
+      background: var(--brown);
+      color: white;
+    }
+    .project-art {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      transition: transform .55s ease;
+    }
+    .project-card:hover .project-art { transform: scale(1.06); }
+    .art-one {
+      background:
+        linear-gradient(0deg, rgba(19,13,11,.86), transparent 70%),
+        linear-gradient(140deg, transparent 20%, rgba(255,195,118,.2)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85") center/cover;
+    }
+    .art-two {
+      background:
+        linear-gradient(0deg, rgba(19,13,11,.88), transparent 70%),
+        url("https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=900&q=85") center/cover;
+    }
+    .art-three {
+      background:
+        linear-gradient(0deg, rgba(19,13,11,.9), transparent 70%),
+        url("https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85") center/cover;
+    }
+    .play {
+      position: absolute;
+      top: 47%;
+      left: 50%;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 50%;
+      background: rgba(20,10,10,.28);
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      transition: background .2s ease, transform .2s ease;
+    }
+    .project-card:hover .play { background: var(--burgundy); transform: translate(-50%, -50%) scale(1.08); }
+    .project-info { position: absolute; right: 16px; bottom: 13px; left: 16px; }
+    .project-info h3 { margin: 0 0 3px; font: 500 18px var(--serif); }
+    .project-info p { margin: 0; font-size: 8px; letter-spacing: .18em; text-transform: uppercase; }
+
+    .services { background: rgba(239,226,208,.52); }
+    .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .service {
+      padding: 4px 24px 0;
+      text-align: center;
+      border-right: 1px solid var(--line);
+    }
+    .service:last-child { border-right: 0; }
+    .service-icon {
+      width: 64px; height: 64px; margin: 0 auto 10px;
+      display: grid; place-items: center;
+      border-radius: 50%; background: #efdfcd; color: var(--burgundy);
+      font-size: 26px;
+    }
+    .service h3 { margin: 0 0 6px; color: var(--maroon); font: 500 18px var(--serif); }
+    .service p { max-width: 230px; margin: 0 auto; font-size: 12px; line-height: 1.6; }
+
+    .about { display: grid; grid-template-columns: .72fr 1.28fr; align-items: center; gap: 42px; }
+    .about-photo {
+      min-height: 260px;
+      overflow: hidden;
+      border-radius: 12px;
+      background: var(--burgundy);
+      box-shadow: -12px 12px 0 var(--burgundy);
+    }
+    .about-photo img { width: 100%; height: 100%; min-height: 260px; display: block; object-fit: cover; object-position: center 30%; }
+    .about h2 { margin: 0 0 10px; color: var(--maroon); font: 500 clamp(28px, 3.3vw, 40px) var(--serif); line-height: 1.15; }
+    .about p { max-width: 620px; margin: 0 0 14px; font-size: 13px; }
+    .detail { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; font-size: 12px; }
+    .detail-icon { color: var(--burgundy); font-size: 18px; line-height: 1.2; }
+    .detail span:last-child { color: var(--muted); }
+
+    .contact-band {
+      padding: 25px clamp(22px, 6.5vw, 84px);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      color: #fff4e9;
+      background:
+        radial-gradient(ellipse at 15% 20%, rgba(166,94,74,.25), transparent 45%),
+        repeating-linear-gradient(165deg, transparent 0 48px, rgba(255,255,255,.025) 49px 50px),
+        var(--maroon);
+    }
+    .contact-band h2 { margin: 0; font: 500 clamp(23px, 3vw, 32px) var(--serif); }
+    .contact-band p { margin: 2px 0 0; font-size: 12px; color: #e7d1c2; }
+    .email-link { padding: 10px 17px; border: 1px solid rgba(255,244,233,.65); border-radius: 999px; font-size: 11px; transition: background .2s ease; }
+    .email-link:hover { color: var(--maroon); background: #fff4e9; }
+    footer {
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;
+      padding: 15px 20px; border-top: 1px solid rgba(255,244,233,.22);
+      color: #d8bfae; background: var(--maroon); font-size: 9px; letter-spacing: .12em;
+    }
+    .footer-divider { opacity: .6; }
+
+    @media (max-width: 760px) {
+      .site-header { min-height: 64px; padding: 14px 22px; align-items: flex-start; flex-direction: column; gap: 12px; }
+      .brand { font-size: 14px; }
+      .nav { width: 100%; gap: 0; justify-content: space-between; flex-wrap: wrap; }
+      .nav a { font-size: 11px; }
+      .nav .nav-cta { padding: 7px 12px; }
+      .hero { grid-template-columns: 1fr; padding-top: 44px; gap: 12px; }
+      .hero-content { order: 1; }
+      .hero-visual { order: 0; min-height: 280px; }
+      .portrait-frame { width: min(72vw, 280px); height: 285px; }
+      .availability { right: 2%; top: 4px; }
+      .spark-one { left: 7%; top: 25px; }
+      .spark-two { right: 7%; top: 125px; }
+      h1 { font-size: clamp(42px, 10vw, 60px); }
+      .hero-copy { margin-top: 16px; }
+      .projects { grid-template-columns: 1fr; }
+      .project-card { min-height: 250px; }
+      .service-grid { grid-template-columns: 1fr; gap: 24px; }
+      .service { padding: 0 8px 22px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .service:last-child { border-bottom: 0; padding-bottom: 0; }
+      .about { grid-template-columns: 1fr; gap: 30px; }
+      .about-photo { width: calc(100% - 12px); min-height: 300px; }
+      .about-photo img { min-height: 300px; max-height: 420px; }
+      .contact-band { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Portfolio</h1>
-        <p>Hi, I am a passionate creator building cool things.</p>
-    </header>
-    <div class="container">
-        <h2>About Me</h2>
-        <p>Write a brief summary introduction about yourself, your career path, or your studies here.</p>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Mariam Mambuay home">MARIAM MAMBUAY</a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a class="nav-cta" href="#contact">Let’s Create</a>
+    </nav>
+  </header>
 
-        <h2>My Projects</h2>
-        <ul>
-            <li><strong>Project One:</strong> A short description of what you built.</li>
-            <li><strong>Project Two:</strong> Another cool project description.</li>
-        </ul>
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-content">
+        <p class="eyebrow">AI Video Creation <span aria-hidden="true">•</span> Motion Design</p>
+        <h1>Stories that move.<br>Visuals that stay.</h1>
+        <p class="hero-copy">AI-generated video content and motion-led visuals for brands, creators, and campaigns.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#work">Explore My Work</a>
+          <a class="button button-outline" href="#contact">Let’s Talk</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Portrait of Mariam">
+        <span class="spark spark-one" aria-hidden="true">✦</span>
+        <div class="portrait-frame"><img src="assets/portrait-reference.png" alt="Mariam G. Mambuay"></div>
+        <span class="orbit" aria-hidden="true"></span>
+        <span class="spark spark-two" aria-hidden="true">✦</span>
+        <span class="availability">Available for projects</span>
+      </div>
+    </section>
 
-        <h2>Contact</h2>
-        <p>Email: youremail@example.com</p>
-    </div>
+    <section class="section" id="work">
+      <div class="section-heading"><h2>Featured Work</h2><span class="rule"></span><a href="#contact">View All Work&nbsp; →</a></div>
+      <div class="projects">
+        <a class="project-card" href="#contact" aria-label="Discuss a cinematic brand film project">
+          <div class="project-art art-one"></div><span class="play" aria-hidden="true">▶</span>
+          <div class="project-info"><h3>Cinematic Brand Film</h3><p>Brand Story &nbsp; / &nbsp; AI Video</p></div>
+        </a>
+        <a class="project-card" href="#contact" aria-label="Discuss product visuals">
+          <div class="project-art art-two"></div><span class="play" aria-hidden="true">▶</span>
+          <div class="project-info"><h3>Product Visuals</h3><p>Product &nbsp; / &nbsp; AI Video</p></div>
+        </a>
+        <a class="project-card" href="#contact" aria-label="Discuss a social campaign">
+          <div class="project-art art-three"></div><span class="play" aria-hidden="true">▶</span>
+          <div class="project-info"><h3>Social Campaign</h3><p>Social Media &nbsp; / &nbsp; Motion Graphics</p></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section services" id="services">
+      <div class="section-heading"><h2>My Services</h2><span class="rule"></span><a href="#contact">Let’s Collaborate&nbsp; →</a></div>
+      <div class="service-grid">
+        <article class="service"><div class="service-icon" aria-hidden="true">▷</div><h3>AI Video Production</h3><p>From concept to final cut—AI-powered videos that bring your ideas to life.</p></article>
+        <article class="service"><div class="service-icon" aria-hidden="true">◇</div><h3>Motion Graphics</h3><p>Dynamic visuals, smooth motion, and polished storytelling for your brand.</p></article>
+        <article class="service"><div class="service-icon" aria-hidden="true">Ae</div><h3>After Effects Editing</h3><p>Professional editing, compositing, transitions, and visual effects.</p></article>
+      </div>
+    </section>
+
+    <section class="section about" id="about">
+      <div class="about-photo"><img src="assets/portrait-reference.png" alt="Mariam in an outdoor evening setting"></div>
+      <div>
+        <div class="section-heading"><h2>About Me</h2><span class="rule"></span></div>
+        <h2>Mariam G. Mambuay</h2>
+        <p>I’m an aspiring AI video creator and motion designer who enjoys turning ideas into visually compelling stories. I combine AI-assisted creative tools with an interest in Adobe After Effects, cinematic style, and modern visual storytelling.</p>
+        <div class="detail"><span class="detail-icon" aria-hidden="true">✧</span><span><strong>B.S. Civil Engineering</strong><br>Major in Construction Engineering<br>Andress Bonifacio College · 2021–2026</span></div>
+        <div class="detail"><span class="detail-icon" aria-hidden="true">⌖</span><span>Dipolog City, Zamboanga del Norte</span></div>
+        <div class="detail"><span class="detail-icon" aria-hidden="true">☎</span><span>0910 695 2291</span></div>
+      </div>
+    </section>
+
+    <section class="contact-band" id="contact">
+      <div><h2>Have a story worth telling?</h2><p>Let’s turn your ideas into cinematic visuals.</p></div>
+      <a class="email-link" href="mailto:mariamcanlas142@gmail.com">✉ &nbsp; mariamcanlas142@gmail.com</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>MARIAM MAMBUAY</span><span class="footer-divider">|</span>
+    <span>Dipolog City, Zamboanga del Norte</span><span class="footer-divider">•</span><span>0910 695 2291</span>
+  </footer>
 </body>
 </html>
+'''
+
+html_path = base / "index.html"
+html_path.write_text(html, encoding="utf-8")
+
+zip_path = Path("/mnt/data/mariam_portfolio_website.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+    zf.write(html_path, "mariam_portfolio/index.html")
+    zf.write(portrait_path, "mariam_portfolio/assets/portrait-reference.png")
+
+print("Created responsive portfolio website files:")
+print(f"HTML: {html_path}")
+print(f"ZIP:  {zip_path}")
