@@ -141,15 +141,7 @@
       object-position: center 30%;
       mix-blend-mode: normal;
     }
-    .orbit {
-      position: absolute;
-      width: 112%;
-      height: 54px;
-      border: 1px solid rgba(177,112,72,.85);
-      border-radius: 50%;
-      transform: rotate(-17deg);
-      pointer-events: none;
-    }
+
     .spark {
       position: absolute;
       color: #9a5637;
@@ -383,16 +375,6 @@
     border-radius: inherit;
 }
 
-/* Elegant orbit around the portrait */
-
-.orbit {
-    z-index: 2;
-    width: 125%;
-    height: 70px;
-    border-color: rgba(177, 112, 72, 0.75);
-    transform: rotate(-17deg);
-    pointer-events: none;
-}
 
 /* Availability badge */
 
@@ -491,9 +473,7 @@ h1 {
         top: 135px;
     }
 
-    .orbit {
-        width: 110%;
-    }
+  
 
     h1 {
         font-size: clamp(40px, 9vw, 58px);
@@ -543,14 +523,13 @@ h1 {
         >
     </div>
 
-    <span class="orbit orbit-one" aria-hidden="true"></span>
 
     <span class="spark spark-two" aria-hidden="true">✦</span>
 
 
 
 </div>
-        <span class="orbit" aria-hidden="true"></span>
+   
         <span class="spark spark-two" aria-hidden="true">✦</span>
   
       </div>
